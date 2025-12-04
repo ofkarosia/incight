@@ -84,5 +84,7 @@ fn main() -> Result<()> {
         }
     }
 
+    println!("All compression task completed.");
+
     Ok(())
 }

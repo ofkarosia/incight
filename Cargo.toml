@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 color-eyre = "0.6.5"
 demand = "1.8.0"
-phf = { version = "0.13.1", features = ["macros", "phf_macros"] }
+phf = { version = "0.13.1", features = ["macros"] }
 
 [profile.release]
 opt-level = 2
