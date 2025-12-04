@@ -43,6 +43,7 @@ fn main() -> Result<()> {
         .collect();
 
     let list = MultiSelect::new("Select video to process")
+        .filterable(true)
         .options(options)
         .run()?;
 
