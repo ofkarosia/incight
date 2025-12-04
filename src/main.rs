@@ -1,4 +1,4 @@
-use std::{env, path::PathBuf, process::Command};
+use std::{env, path::PathBuf, process::Command, time::Instant};
 
 use color_eyre::eyre::{ContextCompat, Result};
 use demand::{DemandOption, MultiSelect};
@@ -52,6 +52,8 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
+    let time = Instant::now();
+
     for i in list {
         let path = &video_paths[i];
         let stem = path
@@ -85,7 +87,7 @@ fn main() -> Result<()> {
         }
     }
 
-    println!("All compression task completed.");
+    println!("All compression task completed. Time elapsed: {:.2}", time.elapsed().as_secs_f64());
 
     Ok(())
 }
