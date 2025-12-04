@@ -1,7 +1,7 @@
 use std::{env, path::PathBuf, process::Command, time::Instant};
 
 use color_eyre::eyre::{ContextCompat, Result};
-use demand::{DemandOption, MultiSelect};
+use demand::{DemandOption, MultiSelect, Select};
 use phf::{Set, phf_set};
 
 static EXT_LIST: Set<&'static str> = phf_set! {
@@ -52,6 +52,12 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
+    let preset = Select::new("Select a preset").options(vec![
+        DemandOption::new("fast"),
+        DemandOption::new("medium"),
+        DemandOption::new("slow"),
+    ]).run()?;
+
     let time = Instant::now();
 
     for i in list {
@@ -74,7 +80,9 @@ fn main() -> Result<()> {
                 "-crf",
                 "23.5",
                 "-preset",
-                "fast",
+                preset,
+                "-movflags",
+                "+faststart",
                 &format!("{}_batch.{}", stem, ext),
             ])
             .spawn()?
