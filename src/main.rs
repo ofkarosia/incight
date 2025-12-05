@@ -1,8 +1,14 @@
-use std::{env, path::PathBuf, process::Command, time::Instant};
+use std::{env, path::PathBuf};
 
-use color_eyre::eyre::{ContextCompat, Result};
+use color_eyre::eyre::Result;
 use demand::{DemandOption, MultiSelect, Select};
 use phf::{Set, phf_set};
+use strum::VariantArray;
+
+use crate::{ffmpeg::compress_video, preset::Preset};
+
+mod ffmpeg;
+mod preset;
 
 static EXT_LIST: Set<&'static str> = phf_set! {
     "mp4",
@@ -17,6 +23,36 @@ static EXT_LIST: Set<&'static str> = phf_set! {
     "mpg",
     "mpeg"
 };
+
+fn get_custom_preset_args() -> Result<(String, String, String)> {
+    let preset = Select::new("Select a built-in preset")
+        .options(vec![
+            DemandOption::new("fast"),
+            DemandOption::new("medium"),
+            DemandOption::new("slow"),
+        ])
+        .run()?
+        .to_string();
+
+    let crf = Select::new("Select CRF value")
+        .options(vec![
+            DemandOption::new("26"),
+            DemandOption::new("27"),
+            DemandOption::new("28"),
+        ])
+        .run()?
+        .to_string();
+
+    let params = MultiSelect::new("Select additional x265 parameters")
+        .options(vec![
+            DemandOption::new("aq-mode=3"),
+            DemandOption::new("rd=4"),
+        ])
+        .run()?
+        .join(":");
+
+    Ok((preset, crf, params))
+}
 
 fn main() -> Result<()> {
     color_eyre::install()?;
@@ -52,50 +88,37 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-    let preset = Select::new("Select a preset").options(vec![
-        DemandOption::new("fast"),
-        DemandOption::new("medium"),
-        DemandOption::new("slow"),
-    ]).run()?;
+    let preset_options = Preset::VARIANTS
+        .iter()
+        .map(DemandOption::new)
+        .collect::<Vec<_>>();
+    let preset = Select::new("Select a preset")
+        .options(preset_options)
+        .run()?;
+    let preset_args = preset.get_args();
 
-    let time = Instant::now();
-
-    for i in list {
-        let path = &video_paths[i];
-        let stem = path
-            .file_stem()
-            .context("Failed to get file stem")?
-            .to_str()
-            .context("Failed to convert OsStr to str")?;
-        let ext = path.extension().unwrap().to_str().unwrap();
-
-        let ecode = Command::new("ffmpeg")
-            .args([
-                "-i",
-                path.to_str().context("Failed to convert path to str")?,
-                "-c:a",
-                "copy",
-                "-c:v",
-                "libx265",
-                "-crf",
-                "23.5",
+    let elapsed = if let Some(args) = preset_args {
+        compress_video(&video_paths, &list, args)?
+    } else {
+        let (preset, crf, x265_params) = get_custom_preset_args()?;
+        compress_video(
+            &video_paths,
+            &list,
+            &[
                 "-preset",
-                preset,
-                "-movflags",
-                "+faststart",
-                &format!("{}_batch.{}", stem, ext),
-            ])
-            .spawn()?
-            .wait()?;
+                &preset,
+                "-crf",
+                &crf,
+                "-x265-params",
+                &x265_params,
+            ],
+        )?
+    };
 
-        if ecode.success() {
-            println!("Processed: {}", path.display());
-        } else {
-            eprintln!("Failed to process: {}", path.display());
-        }
-    }
-
-    println!("All compression task completed. Time elapsed: {:.2}", time.elapsed().as_secs_f64());
+    println!(
+        "All compression task completed. Time elapsed: {:.2}s",
+        elapsed
+    );
 
     Ok(())
 }
