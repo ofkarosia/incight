@@ -1,6 +1,7 @@
 use std::{path::PathBuf, process::Command, time::Instant};
 
 use color_eyre::eyre::{ContextCompat, Result};
+use colour::{cyan, e_red};
 
 pub fn compress_video(video_paths: &[PathBuf], targets: &[usize], args: &[&str]) -> Result<f64> {
     let time = Instant::now();
@@ -37,9 +38,13 @@ pub fn compress_video(video_paths: &[PathBuf], targets: &[usize], args: &[&str])
             .wait()?;
 
         if ecode.success() {
-            println!("Processed: {}", path.display());
+            cyan!("Processed: ");
+            println!("{}", path.display());
+            println!("")
         } else {
-            eprintln!("Failed to process: {}", path.display());
+            e_red!("Failed to process: ");
+            eprintln!("{}", path.display());
+            eprintln!("")
         }
     }
 

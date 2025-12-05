@@ -1,6 +1,7 @@
 use std::{env, path::PathBuf};
 
 use color_eyre::eyre::Result;
+use colour::green;
 use demand::{DemandOption, MultiSelect, Select};
 use phf::{Set, phf_set};
 use strum::VariantArray;
@@ -115,10 +116,8 @@ fn main() -> Result<()> {
         )?
     };
 
-    println!(
-        "All compression task completed. Time elapsed: {:.2}s",
-        elapsed
-    );
+    green!("All compression task completed. Time elapsed: ");
+    println!("{:.2}s", elapsed);
 
     Ok(())
 }

@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 color-eyre = "0.6.5"
+colour = "2.1.0"
 demand = "1.8.0"
 phf = { version = "0.13.1", features = ["macros"] }
 strum = { version = "0.27.2", features = ["derive"] }
