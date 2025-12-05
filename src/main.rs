@@ -116,8 +116,12 @@ fn main() -> Result<()> {
         )?
     };
 
-    green!("All compression task completed. Time elapsed: ");
-    println!("{:.2}s", elapsed);
+    green!("All compression task completed. ");
+    print!("Time elapsed: {:.2}s ", elapsed);
+    println!(
+        "Average time per video: {:.2}s",
+        elapsed / (list.len() as f64)
+    );
 
     Ok(())
 }
